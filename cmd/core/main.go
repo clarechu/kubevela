@@ -300,6 +300,7 @@ func main() {
 		}
 	}
 
+	// 这个地方watch application
 	if err = oamv1alpha2.Setup(mgr, controllerArgs); err != nil {
 		klog.ErrorS(err, "Unable to setup the oam controller")
 		os.Exit(1)
