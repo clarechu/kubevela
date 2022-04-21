@@ -58,6 +58,7 @@ func InstallComponentDefinition(client client.Client, componentData []byte, ioSt
 			return err
 		}
 	}
+	
 	if cd.Spec.Workload.Type == "" {
 		tp.CrdInfo = &types.CRDInfo{
 			APIVersion: cd.Spec.Workload.Definition.APIVersion,

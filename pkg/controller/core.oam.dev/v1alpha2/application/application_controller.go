@@ -109,6 +109,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	logCtx := monitorContext.NewTraceContext(ctx, "").AddTag("application", req.String(), "controller", "application")
 	logCtx.Info("Start reconcile application")
 	defer logCtx.Commit("End reconcile application")
+	// 获取application
 	app := new(v1beta1.Application)
 	if err := r.Get(ctx, client.ObjectKey{
 		Name:      req.Name,
@@ -142,6 +143,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return r.endWithNegativeCondition(logCtx, app, condition.ReconcileError(err), common.ApplicationStarting)
 	}
 	endReconcile, result, err := r.handleFinalizers(logCtx, app, handler)
+
 	if err != nil {
 		if app.GetDeletionTimestamp() == nil {
 			return r.endWithNegativeCondition(logCtx, app, condition.ReconcileError(err), common.ApplicationStarting)
@@ -151,7 +153,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	if endReconcile {
 		return result, nil
 	}
-
+	// 把application 转化为 appfile
 	appFile, err := appParser.GenerateAppFile(logCtx, app)
 	if err != nil {
 		r.Recorder.Event(app, event.Warning(velatypes.ReasonFailedParse, err))
