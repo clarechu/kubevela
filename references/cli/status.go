@@ -172,6 +172,9 @@ func printAppEndpoints(ctx context.Context, client client.Client, appName string
 	table.SetColWidth(100)
 	table.SetHeader([]string{"Cluster", "Component", "Ref(Kind/Namespace/Name)", "Endpoint"})
 	for _, endpoint := range endpoints {
+		if endpoint.Cluster == "" {
+			endpoint.Cluster = multicluster.ClusterLocalName
+		}
 		table.Append([]string{endpoint.Cluster, endpoint.Component, fmt.Sprintf("%s/%s/%s", endpoint.Ref.Kind, endpoint.Ref.Namespace, endpoint.Ref.Name), endpoint.String()})
 	}
 	table.Render()
@@ -400,7 +403,7 @@ func printApplicationTree(c common.Args, cmd *cobra.Command, appName string, app
 	var placements []v1alpha1.PlacementDecision
 	af, err := pkgappfile.NewApplicationParser(cli, dm, pd).GenerateAppFile(context.Background(), app)
 	if err == nil {
-		placements, _ = policy.GetPlacementsFromTopologyPolicies(context.Background(), cli, app, af.Policies, true)
+		placements, _ = policy.GetPlacementsFromTopologyPolicies(context.Background(), cli, app.GetNamespace(), af.Policies, true)
 	}
 	format, _ := cmd.Flags().GetString("detail-format")
 	var maxWidth *int

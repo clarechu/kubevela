@@ -1,18 +1,18 @@
 <div style="text-align: center">
   <p align="center">
-    <img src="https://raw.githubusercontent.com/oam-dev/kubevela.io/main/docs/resources/KubeVela-03.png">
+    <img src="https://raw.githubusercontent.com/kubevela/kubevela.io/main/docs/resources/KubeVela-03.png">
     <br><br>
     <i>Make shipping applications more enjoyable.</i>
   </p>
 </div>
 
-![Build status](https://github.com/oam-dev/kubevela/workflows/E2E/badge.svg)
-[![Go Report Card](https://goreportcard.com/badge/github.com/oam-dev/kubevela)](https://goreportcard.com/report/github.com/oam-dev/kubevela)
+![Build status](https://github.com/kubevela/kubevela/workflows/E2E/badge.svg)
+[![Go Report Card](https://goreportcard.com/badge/github.com/kubevela/kubevela)](https://goreportcard.com/report/github.com/kubevela/kubevela)
 ![Docker Pulls](https://img.shields.io/docker/pulls/oamdev/vela-core)
-[![codecov](https://codecov.io/gh/oam-dev/kubevela/branch/master/graph/badge.svg)](https://codecov.io/gh/oam-dev/kubevela)
-[![LICENSE](https://img.shields.io/github/license/oam-dev/kubevela.svg?style=flat-square)](/LICENSE)
-[![Releases](https://img.shields.io/github/release/oam-dev/kubevela/all.svg?style=flat-square)](https://github.com/oam-dev/kubevela/releases)
-[![TODOs](https://img.shields.io/endpoint?url=https://api.tickgit.com/badge?repo=github.com/oam-dev/kubevela)](https://www.tickgit.com/browse?repo=github.com/oam-dev/kubevela)
+[![codecov](https://codecov.io/gh/kubevela/kubevela/branch/master/graph/badge.svg)](https://codecov.io/gh/kubevela/kubevela)
+[![LICENSE](https://img.shields.io/github/license/kubevela/kubevela.svg?style=flat-square)](/LICENSE)
+[![Releases](https://img.shields.io/github/release/kubevela/kubevela/all.svg?style=flat-square)](https://github.com/kubevela/kubevela/releases)
+[![TODOs](https://img.shields.io/endpoint?url=https://api.tickgit.com/badge?repo=github.com/kubevela/kubevela)](https://www.tickgit.com/browse?repo=github.com/oam-dev/kubevela)
 [![Twitter](https://img.shields.io/twitter/url?style=social&url=https%3A%2F%2Ftwitter.com%2Foam_dev)](https://twitter.com/oam_dev)
 [![Artifact HUB](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/kubevela)](https://artifacthub.io/packages/search?repo=kubevela)
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/4602/badge)](https://bestpractices.coreinfrastructure.org/projects/4602)
@@ -125,22 +125,26 @@ helm install --create-namespace -n vela-system kubevela kubevela/vela-minimal --
 
 ### Common parameters
 
-| Name                         | Description                                                                                                                | Value   |
-| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------- |
-| `imagePullSecrets`           | Image pull secrets                                                                                                         | `[]`    |
-| `nameOverride`               | Override name                                                                                                              | `""`    |
-| `fullnameOverride`           | Fullname override                                                                                                          | `""`    |
-| `serviceAccount.create`      | Specifies whether a service account should be created                                                                      | `true`  |
-| `serviceAccount.annotations` | Annotations to add to the service account                                                                                  | `{}`    |
-| `serviceAccount.name`        | The name of the service account to use. If not set and create is true, a name is generated using the fullname template     | `nil`   |
-| `nodeSelector`               | Node selector                                                                                                              | `{}`    |
-| `tolerations`                | Tolerations                                                                                                                | `[]`    |
-| `affinity`                   | Affinity                                                                                                                   | `{}`    |
-| `rbac.create`                | Specifies whether a RBAC role should be created                                                                            | `true`  |
-| `logDebug`                   | Enable debug logs for development purpose                                                                                  | `false` |
-| `logFilePath`                | If non-empty, write log files in this path                                                                                 | `""`    |
-| `logFileMaxSize`             | Defines the maximum size a log file can grow to. Unit is megabytes. If the value is 0, the maximum file size is unlimited. | `1024`  |
-| `kubeClient.qps`             | The qps for reconcile clients, default is 50                                                                               | `50`    |
-| `kubeClient.burst`           | The burst for reconcile clients, default is 100                                                                            | `100`   |
+| Name                          | Description                                                                                                                | Value                |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------- | -------------------- |
+| `imagePullSecrets`            | Image pull secrets                                                                                                         | `[]`                 |
+| `nameOverride`                | Override name                                                                                                              | `""`                 |
+| `fullnameOverride`            | Fullname override                                                                                                          | `""`                 |
+| `serviceAccount.create`       | Specifies whether a service account should be created                                                                      | `true`               |
+| `serviceAccount.annotations`  | Annotations to add to the service account                                                                                  | `{}`                 |
+| `serviceAccount.name`         | The name of the service account to use. If not set and create is true, a name is generated using the fullname template     | `nil`                |
+| `nodeSelector`                | Node selector                                                                                                              | `{}`                 |
+| `tolerations`                 | Tolerations                                                                                                                | `[]`                 |
+| `affinity`                    | Affinity                                                                                                                   | `{}`                 |
+| `rbac.create`                 | Specifies whether a RBAC role should be created                                                                            | `true`               |
+| `logDebug`                    | Enable debug logs for development purpose                                                                                  | `false`              |
+| `logFilePath`                 | If non-empty, write log files in this path                                                                                 | `""`                 |
+| `logFileMaxSize`              | Defines the maximum size a log file can grow to. Unit is megabytes. If the value is 0, the maximum file size is unlimited. | `1024`               |
+| `kubeClient.qps`              | The qps for reconcile clients, default is 50                                                                               | `50`                 |
+| `kubeClient.burst`            | The burst for reconcile clients, default is 100                                                                            | `100`                |
+| `authentication.enabled`      | Enable authentication for application                                                                                      | `false`              |
+| `authentication.withUser`     | Application authentication will impersonate as the request User                                                            | `false`              |
+| `authentication.defaultUser`  | Application authentication will impersonate as the User if no user provided in Application                                 | `kubevela:vela-core` |
+| `authentication.groupPattern` | Application authentication will impersonate as the request Group that matches the pattern                                  | `kubevela:*`         |
 
 

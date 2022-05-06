@@ -25,7 +25,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	apitypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/util/retry"
-	cmdutil "k8s.io/kubectl/pkg/cmd/util"
 	"k8s.io/kubectl/pkg/util/i18n"
 	"k8s.io/kubectl/pkg/util/templates"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -35,6 +34,7 @@ import (
 	"github.com/oam-dev/kubevela/apis/core.oam.dev/v1beta1"
 	"github.com/oam-dev/kubevela/apis/types"
 	velacmd "github.com/oam-dev/kubevela/pkg/cmd"
+	cmdutil "github.com/oam-dev/kubevela/pkg/cmd/util"
 	"github.com/oam-dev/kubevela/pkg/component"
 	"github.com/oam-dev/kubevela/pkg/controller/core.oam.dev/v1alpha2/application"
 	"github.com/oam-dev/kubevela/pkg/controller/utils"
@@ -175,10 +175,7 @@ func (opt *UpCommandOptions) deployExistingApp(f velacmd.Factory, cmd *cobra.Com
 		}
 		oam.SetPublishVersion(app, opt.PublishVersion)
 		if opt.Debug {
-			app.Spec.Policies = append(app.Spec.Policies, v1beta1.AppPolicy{
-				Name: "debug",
-				Type: "debug",
-			})
+			addDebugPolicy(app)
 		}
 		return cli.Update(ctx, app)
 	}); err != nil {
@@ -186,6 +183,18 @@ func (opt *UpCommandOptions) deployExistingApp(f velacmd.Factory, cmd *cobra.Com
 	}
 	cmd.Printf("Application updated with new PublishVersion %s\n", opt.PublishVersion)
 	return nil
+}
+
+func addDebugPolicy(app *v1beta1.Application) {
+	for _, policy := range app.Spec.Policies {
+		if policy.Type == "debug" {
+			return
+		}
+	}
+	app.Spec.Policies = append(app.Spec.Policies, v1beta1.AppPolicy{
+		Name: "debug",
+		Type: "debug",
+	})
 }
 
 func (opt *UpCommandOptions) deployApplicationFromFile(f velacmd.Factory, cmd *cobra.Command) error {
