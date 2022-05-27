@@ -288,6 +288,30 @@ func (p *Parser) GenerateAppFileFromRevision(appRev *v1beta1.ApplicationRevision
 	for k, v := range appRev.Spec.WorkflowStepDefinitions {
 		appfile.RelatedWorkflowStepDefinitions[k] = v.DeepCopy()
 	}
+
+	// add compatible code for upgrading to v1.3 as the workflow steps were not recorded before v1.2
+	if len(appfile.RelatedWorkflowStepDefinitions) == 0 && len(appfile.WorkflowSteps) > 0 {
+		ctx := context.Background()
+		for _, workflowStep := range appfile.WorkflowSteps {
+			if wftypes.IsBuiltinWorkflowStepType(workflowStep.Type) {
+				continue
+			}
+			if _, found := appfile.RelatedWorkflowStepDefinitions[workflowStep.Type]; found {
+				continue
+			}
+			def := &v1beta1.WorkflowStepDefinition{}
+			if err := util.GetCapabilityDefinition(ctx, p.client, def, workflowStep.Type); err != nil {
+				return nil, errors.Wrapf(err, "failed to get workflow step definition %s", workflowStep.Type)
+			}
+			appfile.RelatedWorkflowStepDefinitions[workflowStep.Type] = def
+		}
+
+		appRev.Spec.WorkflowStepDefinitions = make(map[string]v1beta1.WorkflowStepDefinition)
+		for name, def := range appfile.RelatedWorkflowStepDefinitions {
+			appRev.Spec.WorkflowStepDefinitions[name] = *def
+		}
+	}
+
 	for k, v := range appRev.Spec.ScopeDefinitions {
 		appfile.RelatedScopeDefinitions[k] = v.DeepCopy()
 	}
@@ -420,21 +444,37 @@ func (p *Parser) parseWorkflowSteps(ctx context.Context, af *Appfile) error {
 		return err
 	}
 	for _, workflowStep := range af.WorkflowSteps {
-		if wftypes.IsBuiltinWorkflowStepType(workflowStep.Type) {
-			continue
+		err := p.parseWorkflowStep(ctx, af, workflowStep.Type)
+		if err != nil {
+			return err
 		}
-		if _, found := af.RelatedWorkflowStepDefinitions[workflowStep.Type]; found {
-			continue
+
+		if workflowStep.SubSteps != nil {
+			for _, workflowSubStep := range workflowStep.SubSteps {
+				err := p.parseWorkflowStep(ctx, af, workflowSubStep.Type)
+				if err != nil {
+					return err
+				}
+			}
 		}
-		def := &v1beta1.WorkflowStepDefinition{}
-		if err := util.GetCapabilityDefinition(ctx, p.client, def, workflowStep.Type); err != nil {
-			return errors.Wrapf(err, "failed to get workflow step definition %s", workflowStep.Type)
-		}
-		af.RelatedWorkflowStepDefinitions[workflowStep.Type] = def
 	}
 	return nil
 }
 
+func (p *Parser) parseWorkflowStep(ctx context.Context, af *Appfile, workflowStepType string) error {
+	if wftypes.IsBuiltinWorkflowStepType(workflowStepType) {
+		return nil
+	}
+	if _, found := af.RelatedWorkflowStepDefinitions[workflowStepType]; found {
+		return nil
+	}
+	def := &v1beta1.WorkflowStepDefinition{}
+	if err := util.GetCapabilityDefinition(ctx, p.client, def, workflowStepType); err != nil {
+		return errors.Wrapf(err, "failed to get workflow step definition %s", workflowStepType)
+	}
+	af.RelatedWorkflowStepDefinitions[workflowStepType] = def
+	return nil
+}
 func (p *Parser) makeWorkload(ctx context.Context, name, typ string, capType types.CapType, props *runtime.RawExtension) (*Workload, error) {
 	templ, err := p.tmplLoader.LoadTemplate(ctx, p.dm, p.client, typ, capType)
 	if err != nil {

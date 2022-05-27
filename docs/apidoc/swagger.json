@@ -3802,7 +3802,7 @@
 				"tags": [
 					"addon"
 				],
-				"summary": "list all addons",
+				"summary": "list all enabled addons",
 				"operationId": "list",
 				"parameters": [
 					{
@@ -4639,6 +4639,55 @@
 						"description": "OK",
 						"schema": {
 							"$ref": "#/definitions/v1.EmptyResponse"
+						}
+					}
+				}
+			}
+		},
+		"/api/v1/projects/{projectName}/validate_image": {
+			"get": {
+				"consumes": [
+					"application/xml",
+					"application/json"
+				],
+				"produces": [
+					"application/json",
+					"application/xml"
+				],
+				"tags": [
+					"project"
+				],
+				"summary": "validate an image in a project",
+				"operationId": "validateImage",
+				"parameters": [
+					{
+						"type": "string",
+						"description": "image name",
+						"name": "image",
+						"in": "query"
+					},
+					{
+						"type": "string",
+						"description": "identifier of the project",
+						"name": "projectName",
+						"in": "path",
+						"required": true
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "OK",
+						"schema": {
+							"type": "array",
+							"items": {
+								"$ref": "#/definitions/*v1.ImageResponse"
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"schema": {
+							"$ref": "#/definitions/bcode.Bcode"
 						}
 					}
 				}
@@ -5683,6 +5732,7 @@
 		"*v1.ApplicationTriggerBase": {},
 		"*v1.Config": {},
 		"*v1.EmptyResponse": {},
+		"*v1.ImageResponse": {},
 		"addon.Dependency": {
 			"properties": {
 				"name": {
@@ -5752,7 +5802,13 @@
 		},
 		"addon.HelmSource": {
 			"properties": {
+				"password": {
+					"type": "string"
+				},
 				"url": {
+					"type": "string"
+				},
+				"username": {
 					"type": "string"
 				}
 			}
@@ -6722,6 +6778,9 @@
 				"updateTime": {
 					"type": "string",
 					"format": "date-time"
+				},
+				"workloadType": {
+					"$ref": "#/definitions/common.WorkloadTypeDescriptor"
 				}
 			}
 		},
@@ -7547,10 +7606,10 @@
 		},
 		"v1.ApplicationDeployResponse": {
 			"required": [
-				"createTime",
 				"note",
 				"envName",
 				"triggerType",
+				"createTime",
 				"version",
 				"status"
 			],
@@ -7563,7 +7622,7 @@
 					"format": "date-time"
 				},
 				"deployUser": {
-					"type": "string"
+					"$ref": "#/definitions/v1.NameAlias"
 				},
 				"envName": {
 					"type": "string"
@@ -7661,7 +7720,7 @@
 					"format": "date-time"
 				},
 				"deployUser": {
-					"type": "string"
+					"$ref": "#/definitions/v1.NameAlias"
 				},
 				"envName": {
 					"type": "string"
@@ -8057,6 +8116,9 @@
 				"updateTime": {
 					"type": "string",
 					"format": "date-time"
+				},
+				"workloadType": {
+					"$ref": "#/definitions/common.WorkloadTypeDescriptor"
 				}
 			}
 		},
@@ -8714,11 +8776,11 @@
 		},
 		"v1.DetailAddonResponse": {
 			"required": [
-				"invisible",
+				"name",
 				"version",
 				"description",
 				"icon",
-				"name",
+				"invisible",
 				"schema",
 				"uiSchema",
 				"definitions",
@@ -8798,23 +8860,19 @@
 		},
 		"v1.DetailApplicationResponse": {
 			"required": [
-				"updateTime",
 				"project",
-				"createTime",
 				"description",
+				"createTime",
 				"icon",
-				"name",
 				"alias",
+				"updateTime",
+				"name",
 				"policies",
 				"envBindings",
-				"applicationType",
 				"resourceInfo"
 			],
 			"properties": {
 				"alias": {
-					"type": "string"
-				},
-				"applicationType": {
 					"type": "string"
 				},
 				"createTime": {
@@ -8865,20 +8923,20 @@
 		},
 		"v1.DetailClusterResponse": {
 			"required": [
-				"description",
-				"status",
-				"dashboardURL",
+				"kubeConfig",
 				"name",
-				"alias",
-				"provider",
+				"description",
 				"apiServerURL",
+				"status",
+				"reason",
+				"icon",
+				"provider",
+				"kubeConfigSecret",
+				"labels",
+				"dashboardURL",
 				"createTime",
 				"updateTime",
-				"reason",
-				"kubeConfig",
-				"icon",
-				"labels",
-				"kubeConfigSecret",
+				"alias",
 				"resourceInfo"
 			],
 			"properties": {
@@ -8936,14 +8994,14 @@
 		},
 		"v1.DetailComponentResponse": {
 			"required": [
+				"alias",
+				"updateTime",
 				"name",
 				"type",
-				"createTime",
-				"updateTime",
-				"creator",
 				"main",
+				"createTime",
 				"appPrimaryKey",
-				"alias",
+				"creator",
 				"definition"
 			],
 			"properties": {
@@ -9023,17 +9081,20 @@
 				"updateTime": {
 					"type": "string",
 					"format": "date-time"
+				},
+				"workloadType": {
+					"$ref": "#/definitions/common.WorkloadTypeDescriptor"
 				}
 			}
 		},
 		"v1.DetailDefinitionResponse": {
 			"required": [
+				"name",
+				"status",
+				"labels",
 				"alias",
 				"description",
 				"icon",
-				"status",
-				"name",
-				"labels",
 				"schema",
 				"uiSchema"
 			],
@@ -9087,13 +9148,14 @@
 		},
 		"v1.DetailPolicyResponse": {
 			"required": [
-				"updateTime",
-				"name",
-				"type",
-				"description",
 				"creator",
 				"properties",
-				"createTime"
+				"createTime",
+				"updateTime",
+				"envName",
+				"name",
+				"type",
+				"description"
 			],
 			"properties": {
 				"createTime": {
@@ -9104,6 +9166,9 @@
 					"type": "string"
 				},
 				"description": {
+					"type": "string"
+				},
+				"envName": {
 					"type": "string"
 				},
 				"name": {
@@ -9123,17 +9188,17 @@
 		},
 		"v1.DetailRevisionResponse": {
 			"required": [
-				"createTime",
-				"status",
 				"updateTime",
-				"version",
-				"triggerType",
-				"appPrimaryKey",
 				"note",
+				"triggerType",
 				"reason",
+				"envName",
+				"createTime",
 				"deployUser",
-				"workflowName",
-				"envName"
+				"appPrimaryKey",
+				"version",
+				"status",
+				"workflowName"
 			],
 			"properties": {
 				"appPrimaryKey": {
@@ -9150,7 +9215,7 @@
 					"format": "date-time"
 				},
 				"deployUser": {
-					"type": "string"
+					"$ref": "#/definitions/v1.NameAlias"
 				},
 				"envName": {
 					"type": "string"
@@ -9188,9 +9253,9 @@
 		"v1.DetailTargetResponse": {
 			"required": [
 				"name",
-				"updateTime",
 				"createTime",
-				"project"
+				"project",
+				"updateTime"
 			],
 			"properties": {
 				"alias": {
@@ -9230,11 +9295,11 @@
 		},
 		"v1.DetailUserResponse": {
 			"required": [
-				"disabled",
 				"createTime",
 				"lastLoginTime",
 				"name",
 				"email",
+				"disabled",
 				"projects",
 				"roles"
 			],
@@ -9275,12 +9340,12 @@
 		},
 		"v1.DetailWorkflowRecordResponse": {
 			"required": [
+				"namespace",
+				"workflowName",
 				"workflowAlias",
 				"applicationRevision",
 				"status",
 				"name",
-				"namespace",
-				"workflowName",
 				"deployTime",
 				"deployUser",
 				"note",
@@ -9332,14 +9397,14 @@
 		},
 		"v1.DetailWorkflowResponse": {
 			"required": [
-				"name",
-				"enable",
-				"envName",
-				"updateTime",
+				"createTime",
 				"alias",
 				"description",
+				"enable",
+				"updateTime",
+				"name",
 				"default",
-				"createTime"
+				"envName"
 			],
 			"properties": {
 				"alias": {
@@ -9918,11 +9983,11 @@
 		},
 		"v1.LoginUserInfoResponse": {
 			"required": [
-				"disabled",
-				"createTime",
 				"lastLoginTime",
 				"name",
 				"email",
+				"disabled",
+				"createTime",
 				"projects",
 				"platformPermissions",
 				"projectPermissions"
@@ -10068,7 +10133,8 @@
 				"creator",
 				"properties",
 				"createTime",
-				"updateTime"
+				"updateTime",
+				"envName"
 			],
 			"properties": {
 				"createTime": {
@@ -10079,6 +10145,9 @@
 					"type": "string"
 				},
 				"description": {
+					"type": "string"
+				},
+				"envName": {
 					"type": "string"
 				},
 				"name": {
@@ -10847,6 +10916,9 @@
 					"items": {
 						"type": "string"
 					}
+				},
+				"controlPlaneOnly": {
+					"type": "boolean"
 				},
 				"definitionRef": {
 					"$ref": "#/definitions/common.DefinitionReference"

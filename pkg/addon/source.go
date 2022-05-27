@@ -78,7 +78,58 @@ type GitlabAddonSource struct {
 
 // HelmSource  defines the information about the helm repo addon source
 type HelmSource struct {
-	URL string `json:"url,omitempty" validate:"required"`
+	URL      string `json:"url,omitempty" validate:"required"`
+	Username string `json:"username,omitempty"`
+	Password string `json:"password,omitempty"`
+}
+
+// SafeCopier is an interface to copy Struct without sensitive fields, such as Token, Username, Password
+type SafeCopier interface {
+	SafeCopy() interface{}
+}
+
+// SafeCopy hides field Token
+func (g *GitAddonSource) SafeCopy() *GitAddonSource {
+	if g == nil {
+		return nil
+	}
+	return &GitAddonSource{
+		URL:  g.URL,
+		Path: g.Path,
+	}
+}
+
+// SafeCopy hides field Token
+func (g *GiteeAddonSource) SafeCopy() *GiteeAddonSource {
+	if g == nil {
+		return nil
+	}
+	return &GiteeAddonSource{
+		URL:  g.URL,
+		Path: g.Path,
+	}
+}
+
+// SafeCopy hides field Token
+func (g *GitlabAddonSource) SafeCopy() *GitlabAddonSource {
+	if g == nil {
+		return nil
+	}
+	return &GitlabAddonSource{
+		URL:  g.URL,
+		Repo: g.Repo,
+		Path: g.Path,
+	}
+}
+
+// SafeCopy hides field Username, Password
+func (h *HelmSource) SafeCopy() *HelmSource {
+	if h == nil {
+		return nil
+	}
+	return &HelmSource{
+		URL: h.URL,
+	}
 }
 
 // Item is a partial interface for github.RepositoryContent

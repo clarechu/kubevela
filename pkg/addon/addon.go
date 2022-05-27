@@ -24,6 +24,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"path"
 	"path/filepath"
 	"strings"
@@ -33,11 +34,14 @@ import (
 
 	"cuelang.org/go/cue"
 	cueyaml "cuelang.org/go/encoding/yaml"
+	"github.com/Masterminds/semver/v3"
 	"github.com/google/go-github/v32/github"
-	"github.com/hashicorp/go-version"
 	"github.com/pkg/errors"
 	"github.com/xanzy/go-gitlab"
 	"golang.org/x/oauth2"
+	"helm.sh/helm/v3/pkg/chart"
+	"helm.sh/helm/v3/pkg/chart/loader"
+	"helm.sh/helm/v3/pkg/chartutil"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -57,6 +61,7 @@ import (
 	"github.com/oam-dev/kubevela/apis/core.oam.dev/v1alpha1"
 	"github.com/oam-dev/kubevela/apis/core.oam.dev/v1beta1"
 	"github.com/oam-dev/kubevela/apis/types"
+	"github.com/oam-dev/kubevela/pkg/apiserver/utils/log"
 	utils2 "github.com/oam-dev/kubevela/pkg/controller/utils"
 	cuemodel "github.com/oam-dev/kubevela/pkg/cue/model"
 	"github.com/oam-dev/kubevela/pkg/cue/model/value"
@@ -1125,7 +1130,10 @@ func (h *Installer) loadInstallPackage(name, version string) (*InstallPackage, e
 			return nil, errors.Wrap(err, "fail to find dependent addon in source repository")
 		}
 	} else {
-		versionedRegistry := BuildVersionedRegistry(h.r.Name, h.r.Helm.URL)
+		versionedRegistry := BuildVersionedRegistry(h.r.Name, h.r.Helm.URL, &common.HTTPOption{
+			Username: h.r.Helm.Username,
+			Password: h.r.Helm.Password,
+		})
 		installPackage, err = versionedRegistry.GetAddonInstallPackage(context.Background(), name, version)
 		if err != nil {
 			return nil, err
@@ -1409,15 +1417,31 @@ func checkSemVer(actual string, require string) (bool, error) {
 	}
 	smeVer := strings.TrimPrefix(actual, "v")
 	l := strings.ReplaceAll(require, "v", " ")
-	constraint, err := version.NewConstraint(l)
+	constraint, err := semver.NewConstraint(l)
 	if err != nil {
+		log.Logger.Errorf("fail to new constraint: %s", err.Error())
 		return false, err
 	}
-	v, err := version.NewVersion(smeVer)
+	v, err := semver.NewVersion(smeVer)
 	if err != nil {
+		log.Logger.Errorf("fail to new version %s: %s", smeVer, err.Error())
 		return false, err
 	}
-	return constraint.Check(v), nil
+	if constraint.Check(v) {
+		return true, nil
+	}
+	if strings.Contains(actual, "-") && !strings.Contains(require, "-") {
+		smeVer := strings.TrimPrefix(actual[:strings.Index(actual, "-")], "v")
+		v, err := semver.NewVersion(smeVer)
+		if err != nil {
+			log.Logger.Errorf("fail to new version %s: %s", smeVer, err.Error())
+			return false, err
+		}
+		if constraint.Check(v) {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 func fetchVelaCoreImageTag(ctx context.Context, k8sClient client.Client) (string, error) {
@@ -1437,4 +1461,52 @@ func fetchVelaCoreImageTag(ctx context.Context, k8sClient client.Client) (string
 		}
 	}
 	return tag, nil
+}
+
+// PackageAddon package vela addon directory into a helm chart compatible archive and return its absolute path
+func PackageAddon(addonDictPath string) (string, error) {
+	meta := &Meta{}
+	metaData, err := ioutil.ReadFile(filepath.Clean(filepath.Join(addonDictPath, MetadataFileName)))
+	if err != nil {
+		return "", err
+	}
+
+	err = yaml.Unmarshal(metaData, meta)
+	if err != nil {
+		return "", err
+	}
+
+	chartFile := &chart.Metadata{
+		Name:        meta.Name,
+		Description: meta.Description,
+		// define Vela addon's type to be library in order to prevent installation of a common chart. Please refer to https://helm.sh/docs/topics/library_charts/
+		Type:       "library",
+		Version:    meta.Version,
+		AppVersion: meta.Version,
+		APIVersion: chart.APIVersionV2,
+		Icon:       meta.Icon,
+		Home:       meta.URL,
+		Keywords:   meta.Tags,
+	}
+
+	// save the Chart.yaml file in order to be compatible with helm chart
+	err = chartutil.SaveChartfile(filepath.Join(addonDictPath, chartutil.ChartfileName), chartFile)
+	if err != nil {
+		return "", err
+	}
+
+	ch, err := loader.LoadDir(addonDictPath)
+	if err != nil {
+		return "", err
+	}
+
+	dest, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+	archive, err := chartutil.Save(ch, dest)
+	if err != nil {
+		return "", err
+	}
+	return archive, nil
 }

@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"net/url"
 	"path"
 	"path/filepath"
 	"strings"
@@ -46,7 +45,7 @@ import (
 	k8scmdutil "k8s.io/kubectl/pkg/cmd/util"
 	"sigs.k8s.io/yaml"
 
-	utils2 "github.com/oam-dev/kubevela/pkg/apiserver/rest/utils"
+	utils2 "github.com/oam-dev/kubevela/pkg/apiserver/utils"
 	"github.com/oam-dev/kubevela/pkg/utils"
 	"github.com/oam-dev/kubevela/pkg/utils/common"
 	cmdutil "github.com/oam-dev/kubevela/pkg/utils/util"
@@ -204,6 +203,7 @@ func (h *Helper) ListVersions(repoURL string, chartName string, skipCache bool, 
 
 // GetIndexInfo get index.yaml form given repo url
 func (h *Helper) GetIndexInfo(repoURL string, skipCache bool, opts *common.HTTPOption) (*repo.IndexFile, error) {
+	repoURL = utils.Sanitize(repoURL)
 	if h.cache != nil && !skipCache {
 		if i := h.cache.Get(fmt.Sprintf(repoPatten, repoURL)); i != nil {
 			return i.(*repo.IndexFile), nil
@@ -211,13 +211,10 @@ func (h *Helper) GetIndexInfo(repoURL string, skipCache bool, opts *common.HTTPO
 	}
 	var body []byte
 	if utils.IsValidURL(repoURL) {
-		parsedURL, err := url.Parse(repoURL)
+		indexURL, err := utils.JoinURL(repoURL, "index.yaml")
 		if err != nil {
 			return nil, err
 		}
-		parsedURL.RawPath = path.Join(parsedURL.RawPath, "index.yaml")
-		parsedURL.Path = path.Join(parsedURL.Path, "index.yaml")
-		indexURL := parsedURL.String()
 		body, err = common.HTTPGetWithOption(context.Background(), indexURL, opts)
 		if err != nil {
 			return nil, fmt.Errorf("download index file from %s failure %w", repoURL, err)
