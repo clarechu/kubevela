@@ -11,7 +11,7 @@ spec:
     - name: helm-test-express-server
       type: webservice
       properties:
-        image: {{ .Values.imageRegistry }}{{ .Values.test.app.repository }}:{{ .Values.test.app.tag }}
+        image: {{ .Values.imageRegistry }}/{{ .Values.test.app.name }}:{{ .Values.test.app.tag }}
         port: 8000
       traits:
         - type: ingress
@@ -32,7 +32,7 @@ spec:
   serviceAccountName: {{ include "kubevela.serviceAccountName" . }}
   containers:
     - name: {{ .Release.Name }}-application-test
-      image: {{ .Values.imageRegistry }}{{ .Values.test.k8s.repository }}:{{ .Values.test.k8s.tag }}
+      image: {{ .Values.imageRegistry }}/{{ .Values.test.k8s.name }}:{{ .Values.test.k8s.tag }}
       imagePullPolicy: IfNotPresent
       command:
         - /bin/bash

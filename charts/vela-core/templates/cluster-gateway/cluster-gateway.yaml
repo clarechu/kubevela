@@ -36,7 +36,7 @@ spec:
             - "--tls-cert-file={{ .Values.multicluster.clusterGateway.secureTLS.certPath }}/tls.crt"
             - "--tls-private-key-file={{ .Values.multicluster.clusterGateway.secureTLS.certPath }}/tls.key"
             {{- end }}
-          image: {{ .Values.imageRegistry }}{{ .Values.multicluster.clusterGateway.image.repository }}:{{ .Values.multicluster.clusterGateway.image.tag }}
+          image: {{ .Values.imageRegistry }}/{{ .Values.multicluster.clusterGateway.image.name }}:{{ .Values.multicluster.clusterGateway.image.tag }}
           imagePullPolicy: {{ .Values.multicluster.clusterGateway.image.pullPolicy }}
           resources:
           {{- toYaml .Values.multicluster.clusterGateway.resources | nindent 12 }}

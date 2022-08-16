@@ -225,7 +225,7 @@ spec:
             - "--authentication-default-user={{ .Values.authentication.defaultUser }}"
             - "--authentication-group-pattern={{ .Values.authentication.groupPattern }}"
             {{ end }}
-          image: {{ .Values.imageRegistry }}{{ .Values.image.repository }}:{{ .Values.image.tag }}
+          image: {{ .Values.imageRegistry }}/{{ .Values.image.name }}:{{ .Values.image.tag }}
           imagePullPolicy: {{ quote .Values.image.pullPolicy }}
           resources:
           {{- toYaml .Values.resources | nindent 12 }}

@@ -55,12 +55,13 @@ workflow:
 replicaCount: 1
 
 ## @param imageRegistry Image registry
-imageRegistry: ""
+# imageRegistry registry.cn-shenzhen.aliyuncs.com/oamdev
+imageRegistry: "oamdev"
 ## @param image.repository Image repository
 ## @param image.tag Image tag
 ## @param image.pullPolicy Image pull policy
 image:
-  repository: oamdev/vela-core
+  name: vela-core
   tag: latest
   pullPolicy: Always
 
@@ -135,7 +136,7 @@ multicluster:
     replicaCount: 1
     port: 9443
     image:
-      repository: oamdev/cluster-gateway
+      name: cluster-gateway
       tag: v1.4.0
       pullPolicy: IfNotPresent
     resources:
@@ -157,10 +158,10 @@ multicluster:
 ## @param test.k8s.tag Test k8s tag
 test:
   app:
-    repository: oamdev/hello-world
+    name: hello-world
     tag: v1
   k8s:
-    repository: oamdev/alpine-k8s
+    name: alpine-k8s
     tag: 1.18.2
 
 
@@ -229,7 +230,7 @@ admissionWebhooks:
   patch:
     enabled: true
     image:
-      repository: oamdev/kube-webhook-certgen
+      name: kube-webhook-certgen
       tag: v2.4.1
       pullPolicy: IfNotPresent
     nodeSelector: {}
